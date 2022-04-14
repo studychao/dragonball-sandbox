@@ -1,0 +1,12 @@
+[package]
+name = "upcall"
+version = "0.1.0"
+authors = ["Alibaba Dragonball team"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1"
+slog = "2"
+thiserror = "1"
+
+dbs_utils = { path = "../dbs-utils", version = "0.1" }

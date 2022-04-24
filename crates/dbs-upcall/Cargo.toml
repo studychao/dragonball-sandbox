@@ -1,5 +1,5 @@
 [package]
-name = "upcall"
+name = "dbs-upcall"
 version = "0.1.0"
 authors = ["Alibaba Dragonball team"]
 edition = "2018"
@@ -8,5 +8,7 @@ edition = "2018"
 anyhow = "1"
 slog = "2"
 thiserror = "1"
+timerfd = "1.2.0"
 
-dbs_utils = { path = "../dbs-utils", version = "0.1" }
+dbs-utils = { path = "../dbs-utils", version = "0.1" }
+dbs-virtio-devices = { path = "../dbs-virtio-devices", version = "0.1", features = ["virtio-vsock"] }

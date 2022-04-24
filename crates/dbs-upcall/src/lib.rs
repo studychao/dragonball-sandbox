@@ -18,8 +18,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use dbs_utils::epoll_manager::{EpollManager, EventOps, EventSet, Events, MutEventSubscriber};
-use dbs_utils::timerfd::{SetTimeFlags, TimerFd, TimerState};
-// use virtio::vsock::backend::{VsockInnerConnector, VsockStream};
+use timerfd::{SetTimeFlags, TimerFd, TimerState};
+use dbs_virtio_devices::vsock::backend::{VsockInnerConnector, VsockStream};
 
 pub use crate::dev_mgr_service::{
     AddMmioDevRequest, CpuDevRequest, DevMgrRequest, DevMgrResponse, DevMgrService,
@@ -198,6 +198,7 @@ impl<S: UpcallClientService + Send + 'static> UpcallClient<S> {
         connector: VsockInnerConnector,
         epoll_manager: EpollManager,
         service: S,
+        logger: slog::Logger,
     ) -> Result<Self> {
         let info = UpcallClientInfo {
             connector,
@@ -209,7 +210,7 @@ impl<S: UpcallClientService + Send + 'static> UpcallClient<S> {
         Ok(UpcallClient {
             epoll_manager,
             info: Arc::new(Mutex::new(info)),
-            logger: LOGGER.new_logger(slog::o!("subsystem" => "upcall_client")),
+            logger: logger
         })
     }
 
@@ -301,8 +302,7 @@ impl<S: UpcallClientService + Send> UpcallEpollHandler<S> {
         self.in_reconnect = true;
 
         self.reconnect_timer
-            .clear()
-            .map_err(UpcallClientError::TimerFd)?;
+            .set_state(TimerState::Disarmed, SetTimeFlags::Default);
 
         if self.reconnect_time > SERVER_MAX_RECONNECT_TIME {
             slog::error!(self.logger, "upcall server's max reconnect time exceed");
@@ -395,10 +395,7 @@ impl<S: UpcallClientService + Send> UpcallEpollHandler<S> {
     fn handle_reconnect_event(&mut self, ops: &mut EventOps) {
         // we should clear the reconnect timer and flag first
         self.in_reconnect = false;
-        if let Err(e) = self.reconnect_timer.clear() {
-            slog::error!(self.logger, "set reconnect timer error {}", e);
-            return;
-        }
+        self.reconnect_timer.set_state(TimerState::Disarmed, SetTimeFlags::Default);
 
         let info = self.info.clone();
         let mut info = info.lock().unwrap();
@@ -472,9 +469,8 @@ pub trait UpcallClientService {
 
 #[cfg(test)]
 mod tests {
-    use logger::LOGGER;
-    use utils::epoll_manager::SubscriberOps;
-    use virtio::vsock::backend::{VsockBackend, VsockInnerBackend};
+    use dbs_utils::epoll_manager::SubscriberOps;
+    use dbs_virtio_devices::vsock::backend::{VsockBackend, VsockInnerBackend};
 
     use super::*;
 
@@ -648,11 +644,13 @@ mod tests {
     }
 
     fn get_upcall_client() -> (VsockInnerBackend, UpcallClient<FakeService>) {
+        let drain = slog::Discard;
+        let root = slog::Logger::root(drain, slog::o!());
         let vsock_backend = VsockInnerBackend::new().unwrap();
         let connector = vsock_backend.get_connector();
         let epoll_manager = EpollManager::default();
         let upcall_client =
-            UpcallClient::new(connector, epoll_manager, FakeService::default()).unwrap();
+            UpcallClient::new(connector, epoll_manager, FakeService::default(), root).unwrap();
 
         (vsock_backend, upcall_client)
     }
@@ -667,7 +665,7 @@ mod tests {
         let mut read_buffer = vec![0; 12];
         assert!(inner_stream.read(&mut read_buffer).is_ok());
         assert_eq!(
-            read_buffer,
+            read_buffer, 
             format!("CONNECT {}\n", SERVER_PORT).into_bytes()
         );
     }
@@ -799,8 +797,9 @@ mod tests {
 
     fn get_upcall_epoll_handler() -> (VsockInnerBackend, UpcallEpollHandler<FakeService>) {
         let (inner_backend, info) = get_upcall_client_info();
-        let logger = LOGGER.new_logger(slog::o!());
-        let epoll_handler = UpcallEpollHandler::new(Arc::new(Mutex::new(info)), &logger).unwrap();
+        let drain = slog::Discard;
+        let root = slog::Logger::root(drain, slog::o!());
+        let epoll_handler = UpcallEpollHandler::new(Arc::new(Mutex::new(info)), &root).unwrap();
 
         (inner_backend, epoll_handler)
     }

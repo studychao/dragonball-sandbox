@@ -10,7 +10,7 @@
 use std::fmt;
 use std::mem;
 
-use virtio::vsock::backend::VsockStream;
+use dbs_virtio_devices::vsock::backend::VsockStream;
 
 use crate::{
     Result, UpcallClientError, UpcallClientRequest, UpcallClientResponse, UpcallClientService,
@@ -249,7 +249,6 @@ impl UpcallClientService for DevMgrService {
             // we don't have other message type yet
             #[cfg(test)]
             UpcallClientRequest::FakeRequest => unimplemented!(),
-            // _ => return Err(UpcallClientError::InvalidMessage(format!("upcall device manager: invalid request"))),
         };
         stream
             .write_all(&*msg)
@@ -269,7 +268,7 @@ impl UpcallClientService for DevMgrService {
 
 #[cfg(test)]
 mod tests {
-    use virtio::vsock::backend::{VsockBackend, VsockInnerBackend};
+    use dbs_virtio_devices::vsock::backend::{VsockBackend, VsockInnerBackend};
 
     use super::*;
 

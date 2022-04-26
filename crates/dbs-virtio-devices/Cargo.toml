@@ -11,19 +11,28 @@ keywords = ["dragonball", "secure-sandbox", "devices", "virtio"]
 readme = "README.md"
 
 [dependencies]
+dbs-address-space = { version = "0.1.0", path = "../dbs-address-space" }
+blobfs = { git = "https://github.com/dragonflyoss/image-service.git", optional = true }
 byteorder = "1.4.3"
+caps = "0.5.3"
 dbs-device = { version = "0.1.0", path = "../dbs-device" }
 dbs-interrupt = { version = "0.1.0", path = "../dbs-interrupt", features = ["kvm-legacy-irq", "kvm-msi-irq"] }
 dbs-utils = { version = "0.1.0", path = "../dbs-utils" }
+downcast-rs = ">= 1.0.4"
 epoll = "4.0.1"
+fuse-backend-rs = { version = "0.4.0", optional = true }
 io-uring = "0.5.2"
 kvm-bindings = "0.5.0"
 kvm-ioctls = "0.11.0"
 libc = "0.2.39"
 log = "0.4.14"
-serde = { version = "1.0.27", features = ["derive", "rc"] }
 nix = "0.15.0"
+rafs = { git = "https://github.com/dragonflyoss/image-service.git", optional = true }
+rlimit = "0.7.0"
+serde_json = "1.0.9"
+serde = { version = "1.0.27", features = ["derive", "rc"] }
 thiserror = "1"
+threadpool = "1"
 virtio-bindings = "0.1.0"
 virtio-queue = "0.1.0"
 vmm-sys-util = "0.9.0"
@@ -34,6 +43,7 @@ vm-memory = { version = "0.7.0", features = [ "backend-mmap", "backend-atomic" ]
 
 [features]
 virtio-mmio = []
+virtio-blk = ["virtio-mmio"]
+virtio-fs = ["virtio-mmio", "fuse-backend-rs/virtiofs", "rafs/virtio-fs", "blobfs/virtiofs"]
 virtio-vsock = ["virtio-mmio"]
 virtio-net = ["virtio-mmio"]
-virtio-blk = ["virtio-mmio"]

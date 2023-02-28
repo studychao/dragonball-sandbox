@@ -655,6 +655,7 @@ impl<AS: GuestAddressSpace> Net<AS> {
         event_mgr: EpollManager,
         rx_rate_limiter: Option<RateLimiter>,
         tx_rate_limiter: Option<RateLimiter>,
+        f_iommu_platform: bool,
     ) -> Result<Self> {
         trace!(target: "virtio-net", "{}: Net::new_with_tap()", NET_DRIVER_NAME);
 
@@ -676,6 +677,11 @@ impl<AS: GuestAddressSpace> Net<AS> {
             | 1u64 << VIRTIO_NET_F_HOST_TSO4
             | 1u64 << VIRTIO_NET_F_HOST_UFO
             | 1u64 << VIRTIO_F_VERSION_1;
+
+        
+        if f_iommu_platform {
+            avail_features |= 1u64 << VIRTIO_F_IOMMU_PLATFORM;
+        }
 
         let mut config_space = Vec::new();
         if let Some(mac) = guest_mac {
@@ -717,6 +723,7 @@ impl<AS: GuestAddressSpace> Net<AS> {
         epoll_mgr: EpollManager,
         rx_rate_limiter: Option<RateLimiter>,
         tx_rate_limiter: Option<RateLimiter>,
+        f_iommu_platform: bool,
     ) -> Result<Self> {
         info!("open net tap {}", host_dev_name);
         let tap = Tap::open_named(host_dev_name.as_str(), false).map_err(NetError::TapOpen)?;
@@ -729,6 +736,7 @@ impl<AS: GuestAddressSpace> Net<AS> {
             epoll_mgr,
             rx_rate_limiter,
             tx_rate_limiter,
+            f_iommu_platform
         )
     }
 }
@@ -934,6 +942,7 @@ mod tests {
             epoll_mgr,
             None,
             None,
+            false
         )
         .unwrap();
 
@@ -993,6 +1002,7 @@ mod tests {
                 epoll_mgr.clone(),
                 None,
                 None,
+                false
             )
             .unwrap();
 
@@ -1025,6 +1035,7 @@ mod tests {
                 epoll_mgr.clone(),
                 None,
                 None,
+                false
             )
             .unwrap();
 
@@ -1060,6 +1071,7 @@ mod tests {
                 epoll_mgr.clone(),
                 None,
                 None,
+                false
             )
             .unwrap();
             dev.tap = None;
@@ -1094,6 +1106,7 @@ mod tests {
                 epoll_mgr,
                 None,
                 None,
+                false
             )
             .unwrap();
 
@@ -1133,6 +1146,7 @@ mod tests {
             epoll_mgr,
             None,
             None,
+            false
         )
         .unwrap();
 

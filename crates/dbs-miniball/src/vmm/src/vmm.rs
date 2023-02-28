@@ -567,6 +567,7 @@ impl Vmm {
                 Arc::new(vec![128]),
                 self.event_mgr.clone(),
                 vec![],
+                false
             )
             .map_err(Error::Block)?,
         );

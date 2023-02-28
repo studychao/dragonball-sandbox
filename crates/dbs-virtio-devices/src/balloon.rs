@@ -38,7 +38,7 @@ use vm_memory::{
 };
 
 use crate::device::{VirtioDevice, VirtioDeviceConfig, VirtioDeviceInfo, VirtioQueueConfig};
-use crate::{ActivateResult, DbsGuestAddressSpace, Error, Result, TYPE_BALLOON};
+use crate::{ActivateResult, DbsGuestAddressSpace, Error, Result, TYPE_BALLOON, VIRTIO_F_IOMMU_PLATFORM};
 
 const BALLOON_DRIVER_NAME: &str = "virtio-balloon";
 
@@ -515,6 +515,7 @@ pub struct Balloon<AS: GuestAddressSpace> {
 pub struct BalloonConfig {
     pub f_deflate_on_oom: bool,
     pub f_reporting: bool,
+    pub f_iommu_platform: bool,
 }
 
 impl<AS: GuestAddressSpace> Balloon<AS> {
@@ -530,6 +531,10 @@ impl<AS: GuestAddressSpace> Balloon<AS> {
         if cfg.f_reporting {
             avail_features |= 1u64 << VIRTIO_BALLOON_F_REPORTING;
             queue_sizes.push(PAGE_REPORTING_CAPACITY);
+        }
+
+        if cfg.f_iommu_platform {
+            avail_features |= 1u64 << VIRTIO_F_IOMMU_PLATFORM;
         }
 
         let config = VirtioBalloonConfig::default();
@@ -739,6 +744,7 @@ pub(crate) mod tests {
         let config = BalloonConfig {
             f_deflate_on_oom: true,
             f_reporting: true,
+            f_iommu_platform: false
         };
 
         let mut dev = Balloon::<Arc<GuestMemoryMmap>>::new(epoll_mgr, config).unwrap();
@@ -794,6 +800,7 @@ pub(crate) mod tests {
             let config = BalloonConfig {
                 f_deflate_on_oom: true,
                 f_reporting: true,
+                f_iommu_platform: false
             };
 
             let mut dev = Balloon::<Arc<GuestMemoryMmap>>::new(epoll_mgr.clone(), config).unwrap();
@@ -821,6 +828,7 @@ pub(crate) mod tests {
             let config = BalloonConfig {
                 f_deflate_on_oom: true,
                 f_reporting: true,
+                f_iommu_platform: false
             };
 
             let mut dev = Balloon::<Arc<GuestMemoryMmap>>::new(epoll_mgr, config).unwrap();
@@ -853,6 +861,7 @@ pub(crate) mod tests {
         let config = BalloonConfig {
             f_deflate_on_oom: true,
             f_reporting: true,
+            f_iommu_platform: false
         };
 
         let dev = Balloon::<Arc<GuestMemoryMmap>>::new(epoll_mgr, config).unwrap();

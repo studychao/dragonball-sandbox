@@ -11,6 +11,7 @@ keywords = ["dragonball", "secure-sandbox", "TDX", "confidential container"]
 readme = "README.md"
 
 [dependencies]
+dbs-boot = { path = "../dbs-boot" }
 thiserror = "1.0"
 kvm-bindings = { version = "0.6.0", features = ["fam-wrappers"] }
 vmm-sys-util = "0.11.0"

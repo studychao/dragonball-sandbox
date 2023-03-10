@@ -83,14 +83,16 @@ fn create_madt_table(max_vcpus: u8, boot_vcpus: u8) -> Sdt {
         gsi_base: 0,
         ..Default::default()
     });
-    madt.append(InterruptSourceOverride {
-        r#type: ACPI_APIC_XRUPT_OVERRIDE,
-        length: 10,
-        bus: 0,
-        source: 2,
-        gsi: 2,
-        flags: 0,
-    });
+    for i in 1..16 {
+        madt.append(InterruptSourceOverride {
+            r#type: ACPI_APIC_XRUPT_OVERRIDE,
+            length: 10,
+            bus: 0,
+            source: i as u8,
+            gsi: i as u32,
+            flags: 0,
+        });
+    };
     madt
 }
 

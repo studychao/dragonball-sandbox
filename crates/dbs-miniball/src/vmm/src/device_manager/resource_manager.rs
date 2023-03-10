@@ -523,6 +523,9 @@ impl ResourceManager {
                         }
                     }
                 }
+                _ => {
+                    todo!()
+                }
             };
             resources.append(res);
         }

@@ -1,5 +1,6 @@
 # rust folder & files
 /target
+**/target
 **/*.rs.bk
 Cargo.lock
 

@@ -72,10 +72,10 @@ pub struct TdxCapabilities {
     pub xfam_fixed0: u64,
     /// If any certain bit is 1 in XFAM_FIXED1, it must be 1 in any TD’s XFAM.
     pub xfam_fixed1: u64,
-    /// padding. Set to 0.
-    pub padding: u32,
     /// Number of the following CPUID_CONFIG entries.
     pub nr_cpuid_configs: u32,
+    /// padding. Set to 0.
+    pub padding: u32,
     /// cpuid config list
     pub cpuid_configs: __IncompleteArrayField<TdxCpuidConfig>,
 }

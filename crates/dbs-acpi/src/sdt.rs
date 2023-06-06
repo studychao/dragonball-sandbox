@@ -2,6 +2,9 @@
 // Copyright (c) 2023 Alibaba Cloud
 //
 // SPDX-License-Identifier: Apache-2.0
+
+use std::ptr;
+
 #[repr(packed)]
 pub struct GenericAddress {
     pub address_space_id: u8,
@@ -91,7 +94,8 @@ impl Sdt {
     pub fn write<T>(&mut self, offset: usize, value: T) {
         assert!((offset + (std::mem::size_of::<T>() - 1)) < self.data.len());
         unsafe {
-            *(((self.data.as_mut_ptr() as usize) + offset) as *mut T) = value;
+            let p = ((self.data.as_mut_ptr() as usize) + offset) as *mut T;
+            ptr::write_unaligned(p, value);
         }
         self.update_checksum();
     }

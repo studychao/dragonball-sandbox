@@ -100,7 +100,7 @@ pub fn parse_tdvf_sections(file: &mut File) -> std::result::Result<Vec<TdvfSecti
         )
     })
     .map_err(TdvfError::ReadDescriptor)?;
-    if &descriptor.signature != b"TDVF" {
+    if !matches!(&descriptor.signature, b"TDVF" | b"ASEV") {
         return Err(TdvfError::InvalidDescriptorSignature);
     }
     if descriptor.length as usize

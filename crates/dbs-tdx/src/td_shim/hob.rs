@@ -165,8 +165,19 @@ impl Default for PayloadImageType {
 #[derive(Copy, Clone, Default, Debug)]
 pub struct PayloadInfo {
     pub image_type: PayloadImageType,
+    _padding: u32,
     pub entry_point: u64,
 }
+impl PayloadInfo {
+    pub fn new(image_type: PayloadImageType, entry_point: u64) -> Self {
+        Self {
+            image_type,
+            _padding: 0,
+            entry_point,
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, Default, Debug)]
 struct TdPayloadDescription {
@@ -237,6 +248,10 @@ impl TdHob {
         hob.update_offset::<HobHandoffInfoTable>();
         hob
     }
+    /// returns current offset
+    pub fn current_len(&self) -> u64 {
+        self.current_offset - self.start_offset
+    }
     /// finish writing hot list
     pub fn finish(&mut self, mem: &GuestMemoryMmap) -> Result<(), GuestMemoryError> {
         // Write end
@@ -290,7 +305,6 @@ impl TdHob {
             } else {
                 0x0 // EFI_RESOURCE_SYSTEM_MEMORY
             },
-
             // TODO:
             // QEMU currently fills it in like this:
             // EFI_RESOURCE_ATTRIBUTE_PRESENT | EFI_RESOURCE_ATTRIBUTE_INITIALIZED|EFI_RESOURCE_ATTRIBUTE_ENCRYPTED  | EFI_RESOURCE_ATTRIBUTE_TESTED
@@ -375,10 +389,7 @@ mod tests {
     }
     #[test]
     fn test_payload_description() {
-        let payload = PayloadInfo {
-            image_type: PayloadImageType::RawVmLinux,
-            entry_point: 0x100000,
-        };
+        let payload = PayloadInfo::new(PayloadImageType::RawVmLinux, 0x100000);
         // test len of payload_description
         let payload_description = TdPayloadDescription::new(payload.clone());
         let payload_guid = EfiGuid {

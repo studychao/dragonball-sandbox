@@ -248,6 +248,10 @@ impl TdHob {
         hob.update_offset::<HobHandoffInfoTable>();
         hob
     }
+    /// returns current offset
+    pub fn current_len(&self) -> u64 {
+        self.current_offset - self.start_offset
+    }
     /// finish writing hot list
     pub fn finish(&mut self, mem: &GuestMemoryMmap) -> Result<(), GuestMemoryError> {
         // Write end
